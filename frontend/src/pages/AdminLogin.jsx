@@ -1,9 +1,10 @@
 import React, { useContext, useState } from 'react';
-import { assets } from '../assets/assets';
+ // Make sure you import the assets properly
 import { AdminContext } from '../context/AdminContext';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import logo from '../assets/logo.png';
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -30,52 +31,75 @@ const AdminLogin = () => {
   };
 
   return (
-    <form onSubmit={onSubmitHandler} className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#f7fafc] to-[#e2e8f0]">
-      <div className="flex flex-col gap-6 items-start p-8 sm:p-12 min-w-[340px] sm:min-w-[400px] border border-[#e2e8f0] rounded-xl bg-white text-[#4A4A4A] shadow-lg">
-        <p className="text-3xl font-semibold text-center text-[#16a34a]">
-          Admin Login
-        </p>
-
-        <div className="w-full">
-          <label htmlFor="email" className="text-sm font-medium text-[#333]">Email</label>
-          <input
-            id="email"
-            onChange={(e) => setEmail(e.target.value)}
-            value={email}
-            className="border border-[#DADADA] rounded-lg w-full p-4 mt-2 text-base focus:outline-none focus:ring-2 focus:ring-[#16a34a] transition"
-            type="email"
-            required
-          />
+    <div className="min-h-screen w-full flex items-center justify-center ">
+      <form onSubmit={onSubmitHandler} className="w-full max-w-md p-8 sm:p-12 bg-white/80 backdrop-blur-lg rounded-3xl shadow-lg border border-white/20 space-y-6">
+        {/* Logo Section */}
+        <div className="w-full text-center mb-6">
+          <img src={logo} alt="Logo" className="h-16 mx-auto mb-4" />
         </div>
 
-        <div className="w-full">
-          <label htmlFor="password" className="text-sm font-medium text-[#333]">Password</label>
-          <div className="relative">
+        <div className="text-center mb-4">
+          <h1 className="text-3xl font-bold text-green-600 mb-2">Admin Login</h1>
+          <p className="text-gray-600">Welcome back! Please enter your details.</p>
+        </div>
+
+        {/* Email Input */}
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
             <input
-              id="password"
-              onChange={(e) => setPassword(e.target.value)}
-              value={password}
-              className="border border-[#DADADA] rounded-lg w-full p-4 mt-2 text-base focus:outline-none focus:ring-2 focus:ring-[#16a34a] transition"
-              type={showPassword ? 'text' : 'password'}
+              id="email"
+              onChange={(e) => setEmail(e.target.value)}
+              value={email}
+              className="w-full p-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
+              type="email"
               required
             />
-            <span
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer text-[#16a34a] text-sm"
-              onClick={() => setShowPassword((prev) => !prev)}
-            >
-              {showPassword ? 'Hide' : 'Show'}
-            </span>
+          </div>
+
+          {/* Password Input */}
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+            <div className="relative">
+              <input
+                id="password"
+                onChange={(e) => setPassword(e.target.value)}
+                value={password}
+                className="w-full p-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
+                type={showPassword ? 'text' : 'password'}
+                required
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-600 text-sm hover:text-green-800 transition-all"
+                onClick={() => setShowPassword(prev => !prev)}
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
           </div>
         </div>
 
+        {/* Submit Button */}
         <button
           type="submit"
-          className="bg-[#16a34a] text-white w-full py-3 rounded-lg text-lg font-semibold transition transform hover:bg-[#15803d] hover:scale-105 focus:outline-none"
+          className="w-full py-3 text-lg font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all active:scale-95 focus:outline-none"
         >
-          Login
+          Sign In
         </button>
-      </div>
-    </form>
+
+        {/* Back Button */}
+        <button
+          onClick={() => navigate('/login-selection')}
+          className="absolute top-4 left-4 text-green-600 hover:text-green-800 flex items-center gap-2 transition-all"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+          </svg>
+          Back
+        </button>
+      </form>
+    </div>
   );
 };
 
