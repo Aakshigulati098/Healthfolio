@@ -1,5 +1,4 @@
-
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { AppContext } from '../context/AppContext';
@@ -11,7 +10,19 @@ const Contact = () => {
     message: '',
     rating: 5,
   });
-  const { backendUrl, token } = useContext(AppContext);
+
+  const { backendUrl, token, userData, userEmail } = useContext(AppContext);
+
+  // Pre-fill feedback details with user data
+  useEffect(() => {
+    if (userData) {
+      setFeedback((prevFeedback) => ({
+        ...prevFeedback,
+        name: userData.name, // Use logged-in user's name
+        email: userEmail,    // Use logged-in user's email
+      }));
+    }
+  }, [userData, userEmail]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,7 +30,7 @@ const Contact = () => {
       const { data } = await axios.post(backendUrl + '/api/feedback', feedback, { headers: { token } });
       if (data.success) {
         toast.success('Thank you for your feedback!');
-        setFeedback({ name: '', email: '', message: '', rating: 5 }); // Reset form
+        setFeedback({ name: userData.name, email: userEmail, message: '', rating: 5 }); // Reset only message and rating
       }
     } catch (error) {
       toast.error('Failed to submit feedback');
@@ -59,9 +70,9 @@ const Contact = () => {
                   type="text"
                   required
                   value={feedback.name}
-                  onChange={(e) => setFeedback({ ...feedback, name: e.target.value })}
-                  placeholder="John Doe"
-                  className="w-full border rounded-lg px-4 py-3 text-gray-700 focus:ring-2 focus:ring-blue-300 focus:outline-none"
+                  readOnly // Make the field read-only
+                  placeholder="Your name"
+                  className="w-full border rounded-lg px-4 py-3 text-gray-700 bg-gray-100 cursor-not-allowed focus:outline-none"
                 />
               </div>
 
@@ -72,9 +83,9 @@ const Contact = () => {
                   type="email"
                   required
                   value={feedback.email}
-                  onChange={(e) => setFeedback({ ...feedback, email: e.target.value })}
-                  placeholder="john@example.com"
-                  className="w-full border rounded-lg px-4 py-3 text-gray-700 focus:ring-2 focus:ring-blue-300 focus:outline-none"
+                  readOnly // Make the field read-only
+                  placeholder="Your email"
+                  className="w-full border rounded-lg px-4 py-3 text-gray-700 bg-gray-100 cursor-not-allowed focus:outline-none"
                 />
               </div>
 
