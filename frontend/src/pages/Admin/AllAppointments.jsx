@@ -1,11 +1,16 @@
+import { useSearchParams } from 'react-router-dom';
+
 import React, { useContext, useEffect, useState } from 'react'
 import { AdminContext } from '../../context/AdminContext'
 import { AppContext } from '../../context/AppContext'
 
 const AllAppointments = () => {
+  const [searchParams] = useSearchParams();
+  const initialStatus = searchParams.get('status') || 'all';
+  const [filterStatus, setFilterStatus] = useState(initialStatus);
+
   const {aToken, appointments, getAllAppointments, cancelAppointment} = useContext(AdminContext)
   const{calculateAge, slotDateFormat, currency} = useContext(AppContext)
-  const [filterStatus, setFilterStatus] = useState('all')
 
   useEffect(()=>{
     if(aToken) getAllAppointments()
