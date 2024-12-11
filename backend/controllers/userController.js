@@ -6,7 +6,7 @@ import {v2 as cloudinary} from 'cloudinary'
 import doctorModel from '../models/doctorModel.js';
 import appointmentModel from '../models/appointmentModel.js';
 import razorpay from 'razorpay'
-//api to register user
+
 const registerUser= async(req,res)=>{
     try{
      const {name,email,password}=req.body;
@@ -197,12 +197,4 @@ const cancelAppointment = async(req,res)=>{
     }
 }
 
-// api to  make payment using razorpay
-// const razorpayInstance = new razorpay({
-//    key_id: 'YOUR_KEY_ID',
-//    key_secret: 'YOUR_KEY_SECRET',
-// })
-// const paymentRazorpay = async(req,res)=>{
-   
-// }
 export {registerUser,loginUser,getProfile,updateProfile,bookAppointment,listAppointment,cancelAppointment}
