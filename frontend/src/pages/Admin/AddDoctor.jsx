@@ -1,4 +1,3 @@
-
 import React, { useContext, useState } from "react";
 import { assets } from "../../assets/assets";
 import { AdminContext } from "../../context/AdminContext";
@@ -19,6 +18,11 @@ const AddDoctor = () => {
   const [address2, setAddress2] = useState("");
   const [nameError, setNameError] = useState("");
   const [aboutError, setAboutError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [feeError, setFeeError] = useState("");
+  const [addressError, setAddressError] = useState({ line1: "", line2: "" });
+  const [imageError, setImageError] = useState("");
 
   const { backendUrl, aToken } = useContext(AdminContext);
 
@@ -34,33 +38,189 @@ const AddDoctor = () => {
     'MDS'
   ];
 
-  // Name validation function
+  // Validation functions
   const validateName = (value) => {
-    const nameRegex = /^[A-Za-z.\s]+$/;
-    const minLength = 3;
-    const maxLength = 50;
-    
-    if (!value.trim()) {
+    if (!value) {
       setNameError("Name is required");
       return false;
     }
+
+    // Remove leading and trailing spaces
+    const trimmedValue = value.trim();
+    
+    // Check if original value had leading/trailing spaces
+    if (trimmedValue !== value) {
+      setNameError("Name should not contain leading or trailing spaces");
+      return false;
+    }
+
+    // Check for multiple consecutive spaces
+    if (/\s\s+/.test(value)) {
+      setNameError("Name should not contain multiple consecutive spaces");
+      return false;
+    }
+
+    // Check for capital first letter and single space between words
+    const nameRegex = /^[A-Z][a-z]+(?:\s[A-Z][a-z]+)*$/;
     if (!nameRegex.test(value)) {
-      setNameError("Name should contain only alphabets and spaces");
+      setNameError("Each word must start with a capital letter and have single spaces between words");
       return false;
     }
-    if (value.length < minLength) {
-      setNameError(`Name should be at least ${minLength} characters long`);
+
+    if (value.length < 3 || value.length > 50) {
+      setNameError("Name must be between 3 and 50 characters");
       return false;
     }
-    if (value.length > maxLength) {
-      setNameError(`Name should not exceed ${maxLength} characters`);
-      return false;
-    }
-    if (!/^[A-Z]/.test(value)) {
-      setNameError("Name should start with a capital letter");
-      return false;
-    }
+
     setNameError("");
+    return true;
+  };
+
+  const validateEmail = (value) => {
+    if (!value) {
+      setEmailError("Email is required");
+      return false;
+    }
+
+    // Check for any spaces
+    if (/\s/.test(value)) {
+      setEmailError("Email cannot contain any spaces");
+      return false;
+    }
+
+    // Check maximum length
+    if (value.length > 254) {
+      setEmailError("Email is too long (maximum 254 characters)");
+      return false;
+    }
+
+    // Check local part length (before @)
+    const localPart = value.split('@')[0];
+    if (localPart.length > 64) {
+      setEmailError("Local part of email is too long (maximum 64 characters)");
+      return false;
+    }
+
+    // Gmail format check - no spaces allowed anywhere
+    const gmailRegex = /^[a-zA-Z0-9]+([._-]?[a-zA-Z0-9]+)*@gmail\.com$/;
+
+    if (!gmailRegex.test(value)) {
+      // Specific error messages for different cases
+      if (!value.includes('@')) {
+        setEmailError("Email must contain '@' symbol");
+        return false;
+      }
+      
+      if (!value.endsWith('@gmail.com')) {
+        setEmailError("Only Gmail addresses are allowed");
+        return false;
+      }
+
+      if (/[^a-zA-Z0-9._@-]/.test(value)) {
+        setEmailError("Email can only contain letters, numbers, dots, underscores, and hyphens");
+        return false;
+      }
+
+      if (/\.{2,}/.test(value)) {
+        setEmailError("Email cannot contain consecutive dots");
+        return false;
+      }
+
+      if (/^[._-]/.test(localPart)) {
+        setEmailError("Email cannot start with a special character");
+        return false;
+      }
+
+      if (/[._-]$/.test(localPart)) {
+        setEmailError("Email cannot end with a special character");
+        return false;
+      }
+
+      setEmailError("Please enter a valid Gmail address");
+      return false;
+    }
+    setEmailError("");
+    return true;
+  };
+
+  const validatePassword = (value) => {
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$#!%*?&])[A-Za-z\d@$#!%*?&]{8,}$/;
+    if (!passwordRegex.test(value)) {
+      setPasswordError("Password must be at least 8 characters with 1 uppercase, 1 lowercase, 1 number and 1 special character");
+      return false;
+    }
+    setPasswordError("");
+    return true;
+  };
+
+  const validateFee = (value) => {
+    const fee = parseInt(value);
+    if (!Number.isInteger(fee) || fee <= 0) {
+      setFeeError("Fee must be a positive whole number");
+      return false;
+    }
+    setFeeError("");
+    return true;
+  };
+
+  const validateAddress = (value, line) => {
+    if (!value) {
+      setAddressError(prev => ({...prev, [line]: "Address is required"}));
+      return false;
+    }
+
+    // Remove leading and trailing spaces
+    const trimmedValue = value.trim();
+    
+    // Check if original value had leading/trailing spaces
+    if (trimmedValue !== value) {
+      setAddressError(prev => ({...prev, [line]: "Address should not contain leading or trailing spaces"}));
+      return false;
+    }
+
+    // Check for multiple consecutive spaces
+    if (/\s\s+/.test(value)) {
+      setAddressError(prev => ({...prev, [line]: "Address should not contain multiple consecutive spaces"}));
+      return false;
+    }
+
+    // Updated regex to allow common address formats
+    // Allows: letters, numbers, spaces, #, -, ,, /, and periods
+    // Must start and end with alphanumeric character
+    const addressRegex = /^[a-zA-Z0-9#][a-zA-Z0-9\s#,\-/.]*[a-zA-Z0-9]$/;
+    
+    if (!addressRegex.test(value)) {
+      setAddressError(prev => ({
+        ...prev, 
+        [line]: "Address must start and end with alphanumeric character and can contain letters, numbers, #, spaces, commas, hyphens, periods"
+      }));
+      return false;
+    }
+
+    // Check minimum and maximum length
+    if (value.length < 5 || value.length > 100) {
+      setAddressError(prev => ({
+        ...prev,
+        [line]: "Address must be between 5 and 100 characters"
+      }));
+      return false;
+    }
+
+    setAddressError(prev => ({...prev, [line]: ""}));
+    return true;
+  };
+
+  const validateImage = (file) => {
+    if (!file) {
+      setImageError("Image is required");
+      return false;
+    }
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!validTypes.includes(file.type)) {
+      setImageError("Only JPG, JPEG or PNG files are allowed");
+      return false;
+    }
+    setImageError("");
     return true;
   };
 
@@ -93,12 +253,51 @@ const AddDoctor = () => {
   // Input change handlers
   const handleNameChange = (e) => {
     const value = e.target.value;
-    setName(value);
-    validateName(value);
+    // Prevent multiple consecutive spaces while typing
+    if (!/\s\s+/.test(value)) {
+      setName(value);
+      validateName(value);
+    }
+  };
+
+  const handleEmailChange = (e) => {
+    const value = e.target.value.replace(/\s/g, ''); // Remove any spaces immediately
+    // Only allow valid email characters (no spaces)
+    if (!/[^\w@.-]/.test(value)) {
+      setEmail(value.toLowerCase());
+      validateEmail(value);
+    }
   };
 
   const handlePasswordChange = (e) => {
-    setPassword(e.target.value);
+    const value = e.target.value;
+    setPassword(value);
+    validatePassword(value);
+  };
+
+  const handleFeeChange = (e) => {
+    const value = e.target.value;
+    setFee(value);
+    validateFee(value);
+  };
+
+  const handleAddressChange = (e, line) => {
+    const value = e.target.value;
+    // Prevent multiple consecutive spaces while typing
+    if (!/\s\s+/.test(value)) {
+      if (line === 'line1') setAddress1(value);
+      else setAddress2(value);
+      validateAddress(value, line);
+    }
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (validateImage(file)) {
+      setDocImg(file);
+    } else {
+      e.target.value = '';
+    }
   };
 
   const handleAboutChange = (e) => {
@@ -110,31 +309,25 @@ const AddDoctor = () => {
   const onSubmitHandler = async (event) => {
     event.preventDefault();
     try {
-      // Validate image
-      if (!docImg) {
-        return toast.error("Image not Selected");
-      }
+      // Validate all fields
+      const isImageValid = validateImage(docImg);
+      const isNameValid = validateName(name);
+      const isEmailValid = validateEmail(email);
+      const isPasswordValid = validatePassword(password);
+      const isFeeValid = validateFee(fee);
+      const isAddress1Valid = validateAddress(address1, 'line1');
+      const isAddress2Valid = validateAddress(address2, 'line2');
+      const isAboutValid = validateAbout(about);
 
-      // Validate fees (positive number and reasonable amount)
-      if (fee <= 0) {
-        return toast.error("Fees must be greater than 0");
-      }
-      if (fee > 10000) { // Adjust max limit as needed
-        return toast.error("Fees seems unreasonably high. Please check the amount");
+      if (!isImageValid || !isNameValid || !isEmailValid || !isPasswordValid || 
+          !isFeeValid || !isAddress1Valid || !isAddress2Valid || !isAboutValid) {
+        toast.error("Please fix all validation errors before submitting");
+        return;
       }
 
       // Validate degree
       if (!validDegrees.includes(degree.toUpperCase())) {
         return toast.error(`Invalid degree. Valid degrees are: ${validDegrees.join(', ')}`);
-      }
-
-      // Validate all fields before submission
-      const isNameValid = validateName(name);
-      const isAboutValid = validateAbout(about);
-
-      if (!isNameValid || !isAboutValid) {
-        toast.error("Please fix all validation errors before submitting");
-        return;
       }
 
       const formData = new FormData();
@@ -205,7 +398,8 @@ const AddDoctor = () => {
                     <span className="bg-emerald-500 text-white px-3 py-1 rounded-lg text-sm">Change Photo</span>
                   </div>
                 </label>
-                <input onChange={(e) => setDocImg(e.target.files[0])} type="file" id="doc-img" hidden />
+                <input onChange={handleImageChange} type="file" accept=".jpg,.jpeg,.png" id="doc-img" hidden />
+                {imageError && <p className="mt-1 text-sm text-red-500">{imageError}</p>}
                 <div>
                   <h2 className="text-xl font-semibold text-gray-800 mb-1">Doctor's Profile Picture</h2>
                   <p className="text-gray-600">Upload a professional photo</p>
@@ -240,13 +434,14 @@ const AddDoctor = () => {
                   <div className="form-group">
                     <label className="block text-gray-700 font-medium mb-2">Email Address</label>
                     <input
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={handleEmailChange}
                       value={email}
                       className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-colors"
                       type="email"
                       placeholder="doctor@example.com"
                       required
                     />
+                    {emailError && <p className="mt-1 text-sm text-red-500">{emailError}</p>}
                   </div>
 
                   <div className="form-group mt-6">
@@ -261,6 +456,7 @@ const AddDoctor = () => {
                       placeholder="Set a secure password"
                       required
                     />
+                    {passwordError && <p className="mt-1 text-sm text-red-500">{passwordError}</p>}
                   </div>
 
                   <div className="form-group">
@@ -281,7 +477,7 @@ const AddDoctor = () => {
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">₹</span>
                       <input
-                        onChange={(e) => setFee(e.target.value)}
+                        onChange={handleFeeChange}
                         value={fee}
                         className="w-full border border-gray-300 rounded-xl pl-8 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-colors"
                         type="number"
@@ -289,6 +485,7 @@ const AddDoctor = () => {
                         required
                       />
                     </div>
+                    {feeError && <p className="mt-1 text-sm text-red-500">{feeError}</p>}
                   </div>
                 </div>
 
@@ -325,21 +522,23 @@ const AddDoctor = () => {
                   <div className="form-group">
                     <label className="block text-gray-700 font-medium mb-2">Clinic Address</label>
                     <input
-                      onChange={(e) => setAddress1(e.target.value)}
+                      onChange={(e) => handleAddressChange(e, 'line1')}
                       value={address1}
                       className="w-full border border-gray-300 rounded-xl px-4 py-3 mb-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-colors"
                       type="text"
                       placeholder="Address Line 1"
                       required
                     />
+                    {addressError.line1 && <p className="mt-1 text-sm text-red-500">{addressError.line1}</p>}
                     <input
-                      onChange={(e) => setAddress2(e.target.value)}
+                      onChange={(e) => handleAddressChange(e, 'line2')}
                       value={address2}
                       className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-colors"
                       type="text"
                       placeholder="Address Line 2"
                       required
                     />
+                    {addressError.line2 && <p className="mt-1 text-sm text-red-500">{addressError.line2}</p>}
                   </div>
 
                   <div className="form-group mt-6">
