@@ -72,7 +72,7 @@ const Dashboard = () => {
           </div>
 
           {/* Success Rate */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+          {/* <div className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between mb-4">
               <div className="p-2 bg-amber-50 rounded-lg">
                 <svg className="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -85,7 +85,7 @@ const Dashboard = () => {
               {appointments.length ? Math.round((completedAppointments / appointments.length) * 100) : 0}%
             </h3>
             <p className="text-gray-500 text-sm">Success Rate</p>
-          </div>
+          </div> */}
         </div>
 
         {/* Appointments Overview & Recent Activity */}
@@ -94,7 +94,7 @@ const Dashboard = () => {
           <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm p-6">
             <h2 className="text-xl font-bold text-gray-800 mb-6">Appointments Overview</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-emerald-50 rounded-xl p-4">
+              <Link to="/all-appointments?status=completed" className="bg-emerald-50 rounded-xl p-4 hover:bg-emerald-100 transition-colors">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-emerald-600 font-medium">Completed</span>
                   <span className="text-emerald-600 bg-emerald-100 px-2 py-1 rounded-lg text-sm">
@@ -107,9 +107,9 @@ const Dashboard = () => {
                     style={{width: `${(completedAppointments/appointments.length) * 100}%`}}
                   ></div>
                 </div>
-              </div>
+              </Link>
 
-              <div className="bg-blue-50 rounded-xl p-4">
+              <Link to="/all-appointments?status=upcoming" className="bg-blue-50 rounded-xl p-4 hover:bg-blue-100 transition-colors">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-blue-600 font-medium">Upcoming</span>
                   <span className="text-blue-600 bg-blue-100 px-2 py-1 rounded-lg text-sm">
@@ -122,9 +122,9 @@ const Dashboard = () => {
                     style={{width: `${(upcomingAppointments/appointments.length) * 100}%`}}
                   ></div>
                 </div>
-              </div>
+              </Link>
 
-              <div className="bg-red-50 rounded-xl p-4">
+              <Link to="/all-appointments?status=cancelled" className="bg-red-50 rounded-xl p-4 hover:bg-red-100 transition-colors">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-red-600 font-medium">Cancelled</span>
                   <span className="text-red-600 bg-red-100 px-2 py-1 rounded-lg text-sm">
@@ -137,7 +137,7 @@ const Dashboard = () => {
                     style={{width: `${(cancelledAppointments/appointments.length) * 100}%`}}
                   ></div>
                 </div>
-              </div>
+              </Link>
             </div>
           </div>
 
