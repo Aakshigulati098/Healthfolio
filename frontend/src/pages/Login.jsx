@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { AdminContext } from '../context/AdminContext';
 import { DoctorContext } from '../context/DoctorContext';
 import axios from 'axios';
@@ -10,23 +10,100 @@ const Login = () => {
 
   // State to track current login type (User, Admin, Doctor)
   const [state, setState] = useState('User');
-  
+
   // Form input states
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
+
   // Toggle password visibility
   const [showPassword, setShowPassword] = useState(false);
-  
+
   // Context to manage auth tokens for Admin and Doctor
   const { setAToken, backendUrl } = useContext(AdminContext);
   const { setDToken } = useContext(DoctorContext);
 
+  // State for errors and live feedback
+  const [errors, setErrors] = useState({
+    email: '',
+    password: ''
+  });
+  const [liveFeedback, setLiveFeedback] = useState('');
+
+  // Debounce timeout reference
+  let debounceTimeout;
+
+  // Validation functions
+  const validateEmail = (email) => {
+    if (!email) {
+      return 'Email is required';
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return 'Please enter a valid email address';
+    }
+    return '';
+  };
+
+  const validatePassword = (password) => {
+    if (!password) {
+      return 'Password is required';
+    }
+    if (password.length < 6) {
+      return 'Password must be at least 6 characters long';
+    }
+    if (password.length > 50) {
+      return 'Password cannot exceed 50 characters';
+    }
+    return '';
+  };
+
+  // Real-time validation effect
+  useEffect(() => {
+    if (!email || !password) {
+      setLiveFeedback('');
+      return;
+    }
+
+    // Clear any existing timeout
+    clearTimeout(debounceTimeout);
+
+    // Set up debounce
+    debounceTimeout = setTimeout(async () => {
+      try {
+        const endpoint = backendUrl +
+          (state === 'Admin' ? '/api/admin/validate' : state === 'Doctor' ? '/api/doctor/validate' : '/api/user/validate');
+
+        const { data } = await axios.post(endpoint, { email, password });
+        if (data.success) {
+          setLiveFeedback('Credentials look good!');
+        } else {
+          setLiveFeedback('Invalid credentials. Please check your input.');
+        }
+      } catch (error) {
+        setLiveFeedback('Error validating credentials. Please try again.');
+      }
+    }, 500); // Debounce for 500ms
+
+    return () => clearTimeout(debounceTimeout);
+  }, [email, password, state, backendUrl]);
+
   // Login handler
   const onSubmitHandler = async (event) => {
     event.preventDefault();
-    
-    // Define API endpoint based on user role
+
+    // Validate fields
+    const emailError = validateEmail(email);
+    const passwordError = validatePassword(password);
+
+    setErrors({
+      email: emailError,
+      password: passwordError
+    });
+
+    if (emailError || passwordError) {
+      return;
+    }
+
     let endpoint = '';
     let role = '';
 
@@ -37,17 +114,14 @@ const Login = () => {
       endpoint = '/api/doctor/login';
       role = 'Doctor';
     } else {
-      // Add logic for User login if needed
       endpoint = '/api/user/login';
       role = 'User';
     }
 
     try {
-      // Send login request
       const { data } = await axios.post(backendUrl + endpoint, { email, password });
-      
+
       if (data.success) {
-        // Store token and navigate based on role
         if (role === 'Admin') {
           localStorage.setItem('aToken', data.token);
           setAToken(data.token);
@@ -57,16 +131,14 @@ const Login = () => {
           setDToken(data.token);
           navigate('/doctor-dashboard');
         } else {
-          // User login logic here, e.g., for a patient
           localStorage.setItem('uToken', data.token);
-          navigate('/user-dashboard');  // Redirect to user dashboard
+          navigate('/user-dashboard');
         }
       } else {
         toast.error(data.message);
       }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Login failed');
-      console.error(error);
     }
   };
 
@@ -81,12 +153,24 @@ const Login = () => {
           <label htmlFor="email" className="text-sm font-medium text-[#333]">Email</label>
           <input
             id="email"
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setEmail(value);
+              setErrors((prev) => ({
+                ...prev,
+                email: validateEmail(value)
+              }));
+            }}
             value={email}
-            className="border border-[#DADADA] rounded-lg w-full p-4 mt-2 text-base focus:outline-none focus:ring-2 focus:ring-[#16a34a] transition"
+            className={`border ${errors.email ? 'border-red-400' : 'border-[#DADADA]'} 
+              rounded-lg w-full p-4 mt-2 text-base focus:outline-none focus:ring-2 
+              ${errors.email ? 'focus:ring-red-400' : 'focus:ring-[#16a34a]'} transition`}
             type="email"
             required
           />
+          {errors.email && (
+            <p className="text-sm text-red-500 mt-1">{errors.email}</p>
+          )}
         </div>
 
         <div className="w-full">
@@ -94,9 +178,18 @@ const Login = () => {
           <div className="relative">
             <input
               id="password"
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                setPassword(value);
+                setErrors((prev) => ({
+                  ...prev,
+                  password: validatePassword(value)
+                }));
+              }}
               value={password}
-              className="border border-[#DADADA] rounded-lg w-full p-4 mt-2 text-base focus:outline-none focus:ring-2 focus:ring-[#16a34a] transition"
+              className={`border ${errors.password ? 'border-red-400' : 'border-[#DADADA]'} 
+                rounded-lg w-full p-4 mt-2 text-base focus:outline-none focus:ring-2 
+                ${errors.password ? 'focus:ring-red-400' : 'focus:ring-[#16a34a]'} transition`}
               type={showPassword ? 'text' : 'password'}
               required
             />
@@ -107,7 +200,16 @@ const Login = () => {
               {showPassword ? 'Hide' : 'Show'}
             </span>
           </div>
+          {errors.password && (
+            <p className="text-sm text-red-500 mt-1">{errors.password}</p>
+          )}
         </div>
+
+        {liveFeedback && (
+          <p className={`text-sm mt-2 ${liveFeedback.includes('good') ? 'text-green-500' : 'text-red-500'}`}>
+            {liveFeedback}
+          </p>
+        )}
 
         <button
           type="submit"
@@ -115,47 +217,6 @@ const Login = () => {
         >
           Login
         </button>
-
-        {/* <div className="text-center">
-          {state === 'Admin' ? (
-            <p>
-              Doctor Login?{' '}
-              <span
-                className="text-[#16a34a] underline cursor-pointer"
-                onClick={() => setState('Doctor')}
-              >
-                Click here
-              </span>
-            </p>
-          ) : state === 'Doctor' ? (
-            <p>
-              Admin Login?{' '}
-              <span
-                className="text-[#16a34a] underline cursor-pointer"
-                onClick={() => setState('Admin')}
-              >
-                Click here
-              </span>
-            </p>
-          ) : (
-            <p>
-              Admin or Doctor Login?{' '}
-              <span
-                className="text-[#16a34a] underline cursor-pointer"
-                onClick={() => setState('Admin')}
-              >
-                Click here for Admin
-              </span>{' '}
-              |{' '}
-              <span
-                className="text-[#16a34a] underline cursor-pointer"
-                onClick={() => setState('Doctor')}
-              >
-                Click here for Doctor
-              </span>
-            </p>
-          )}
-        </div> */}
       </div>
     </form>
   );
